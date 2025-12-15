@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
    <head>
-      <title>AR Poster</title>
+      <title>AR Poster - Typing Effect</title>
       <meta name="viewport" content="width=device-width, initial-scale=1" />
 
       <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
@@ -21,14 +21,14 @@
             border-radius: 15px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
             z-index: 1000;
-            font-family: sans-serif;
-            text-align: center;
+            font-family: 'Courier New', Courier, monospace; /* Font ala mesin ketik */
+            text-align: left; /* Typing lebih bagus rata kiri */
 
-            /* Animasi Muncul/Hilang */
+            /* Animasi Muncul/Hilang Box */
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.4s ease, transform 0.4s ease;
-            transform: translateX(-50%) translateY(20px); /* Geser ke bawah dikit saat hidden */
+            transform: translateX(-50%) translateY(20px);
          }
 
          /* Saat visible */
@@ -39,46 +39,110 @@
          }
 
          .floating-desc h3 {
-            margin: 0 0 8px 0;
+            margin: 0 0 10px 0;
             color: #333;
+            font-family: sans-serif; /* Judul tetap font biasa agar tegas */
+            text-align: center;
          }
+
          .floating-desc p {
             margin: 0;
             font-size: 0.9rem;
-            color: #555;
+            color: #333;
+            line-height: 1.6; /* Jarak antar baris agar mudah dibaca */
+            min-height: 100px; /* Menjaga tinggi box agar tidak lompat-lompat saat ngetik */
+         }
+
+         /* Efek Kursor Kedip */
+         .cursor {
+            display: inline-block;
+            width: 2px;
+            background-color: #333;
+            animation: blink 1s infinite;
+         }
+
+         @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
          }
       </style>
 
       <script>
          document.addEventListener("DOMContentLoaded", function () {
             const target = document.querySelector("#target-poster");
-            const desc = document.querySelector(".floating-desc");
+            const descBox = document.querySelector(".floating-desc");
+            const textElement = document.querySelector("#typing-text");
 
+            // --- KONFIGURASI TEKS ---
+            // Saya pecah jadi kalimat-kalimat agar kodenya lebih rapi
+            const fullText = "Selamat datang di dunia Harmoni TerPADU! Poster ini mengajak kita mewujudkan sekolah impian lewat semangat PADU: Peduli, Adil, Damai, dan Unggul. Yuk, jadikan rasa kebersamaan kita sebagai kekuatan utama untuk menciptakan lingkungan belajar yang nyaman!";
+            
+            let typingTimer;
+            let charIndex = 0;
+            
+            // Kecepatan mengetik (makin kecil makin cepat)
+            const typingSpeed = 40; 
+
+            function startTyping() {
+               // Reset dulu
+               textElement.innerHTML = ""; 
+               charIndex = 0;
+               clearTimeout(typingTimer);
+
+               function type() {
+                  if (charIndex < fullText.length) {
+                     // Tambahkan 1 huruf
+                     textElement.innerHTML += fullText.charAt(charIndex);
+                     charIndex++;
+                     
+                     // Lanjut ngetik huruf berikutnya
+                     typingTimer = setTimeout(type, typingSpeed);
+                  }
+               }
+               // Mulai ngetik
+               type();
+            }
+
+            function stopTyping() {
+               clearTimeout(typingTimer);
+               textElement.innerHTML = ""; // Kosongkan teks saat hilang
+            }
+
+            // --- EVENT LISTENER AR ---
+            
             // Saat gambar terdeteksi
             target.addEventListener("targetFound", (event) => {
                console.log("Poster ditemukan");
-               desc.classList.add("visible");
+               descBox.classList.add("visible");
+               
+               // Delay sedikit (0.5 detik) sebelum mulai ngetik supaya box muncul dulu
+               setTimeout(() => {
+                  startTyping();
+               }, 500);
             });
 
             // Saat gambar hilang
             target.addEventListener("targetLost", (event) => {
                console.log("Poster hilang");
-               desc.classList.remove("visible");
+               descBox.classList.remove("visible");
+               stopTyping(); // Hentikan efek ketik
             });
          });
       </script>
    </head>
    <body>
       <div class="floating-desc">
-         <h3>Harmoni TerPADU, Prestasi Melaju</h3>
-         <p>Deskripsi singkat mengenai poster ini. Model 3D akan muncul tepat di atas poster</p>
+         <h3>Harmoni TerPADU</h3>
+         <p>
+            <span id="typing-text"></span><span class="cursor">|</span>
+         </p>
       </div>
 
       <a-scene mindar-image="imageTargetSrc: ./targets.mind; uiScanning: yes;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
          <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
          <a-entity id="target-poster" mindar-image-target="targetIndex: 0">
-            <a-entity gltf-model="./model.glb" rotation="90 0 0" position="0 0 0" scale="0.5 0.5 0.5"> </a-entity>
+            <a-entity gltf-model="./model.glb" rotation="75 0 0" position="-0.5 0 0" scale="0.5 0.5 0.5"> </a-entity>
          </a-entity>
       </a-scene>
    </body>
