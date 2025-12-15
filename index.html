@@ -1,14 +1,37 @@
 <!DOCTYPE html>
 <html>
    <head>
-      <title>AR Poster - Typing Effect</title>
+      <title>AR Poster - Nur Izza Yarismen</title>
       <meta name="viewport" content="width=device-width, initial-scale=1" />
 
       <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
       <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
       <style>
-         /* Deskripsi Melayang (Floating) */
+         #start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+         }
+         #start-btn {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+         }
+
          .floating-desc {
             position: fixed;
             bottom: 20px;
@@ -21,17 +44,15 @@
             border-radius: 15px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
             z-index: 1000;
-            font-family: 'Courier New', Courier, monospace; /* Font ala mesin ketik */
-            text-align: left; /* Typing lebih bagus rata kiri */
+            font-family: "Courier New", Courier, monospace;
+            text-align: left;
 
-            /* Animasi Muncul/Hilang Box */
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.4s ease, transform 0.4s ease;
             transform: translateX(-50%) translateY(20px);
          }
 
-         /* Saat visible */
          .floating-desc.visible {
             opacity: 1;
             visibility: visible;
@@ -41,7 +62,7 @@
          .floating-desc h3 {
             margin: 0 0 10px 0;
             color: #333;
-            font-family: sans-serif; /* Judul tetap font biasa agar tegas */
+            font-family: sans-serif;
             text-align: center;
          }
 
@@ -49,11 +70,10 @@
             margin: 0;
             font-size: 0.9rem;
             color: #333;
-            line-height: 1.6; /* Jarak antar baris agar mudah dibaca */
-            min-height: 100px; /* Menjaga tinggi box agar tidak lompat-lompat saat ngetik */
+            line-height: 1.6;
+            min-height: 100px;
          }
 
-         /* Efek Kursor Kedip */
          .cursor {
             display: inline-block;
             width: 2px;
@@ -62,8 +82,13 @@
          }
 
          @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
+            0%,
+            100% {
+               opacity: 1;
+            }
+            50% {
+               opacity: 0;
+            }
          }
       </style>
 
@@ -72,77 +97,100 @@
             const target = document.querySelector("#target-poster");
             const descBox = document.querySelector(".floating-desc");
             const textElement = document.querySelector("#typing-text");
+            const audioElement = document.querySelector("#bg-audio");
+            const startScreen = document.querySelector("#start-screen");
+            const startBtn = document.querySelector("#start-btn");
 
-            // --- KONFIGURASI TEKS ---
-            // Saya pecah jadi kalimat-kalimat agar kodenya lebih rapi
-            const fullText = "Selamat datang di dunia Harmoni TerPADU! Poster ini mengajak kita mewujudkan sekolah impian lewat semangat PADU: Peduli, Adil, Damai, dan Unggul. Yuk, jadikan rasa kebersamaan kita sebagai kekuatan utama untuk menciptakan lingkungan belajar yang nyaman!";
-            
+            startBtn.addEventListener("click", () => {
+               audioElement.muted = true;
+
+               audioElement
+                  .play()
+                  .then(() => {
+                     audioElement.pause();
+                     audioElement.currentTime = 0;
+
+                     audioElement.muted = false;
+
+                     startScreen.style.display = "none";
+                  })
+                  .catch((e) => {
+                     console.log("Audio permission error:", e);
+                     startScreen.style.display = "none";
+                  });
+            });
+
+            const fullText =
+               "Selamat datang di dunia Harmoni TerPADU! Poster ini mengajak kita mewujudkan sekolah impian lewat semangat PADU: Peduli, Adil, Damai, dan Unggul. Yuk, jadikan rasa kebersamaan kita sebagai kekuatan utama untuk menciptakan lingkungan belajar yang nyaman, saling mendukung, dan siap melaju mengukir prestasi terbaik!";
             let typingTimer;
             let charIndex = 0;
-            
-            // Kecepatan mengetik (makin kecil makin cepat)
-            const typingSpeed = 40; 
+            const typingSpeed = 43;
 
             function startTyping() {
-               // Reset dulu
-               textElement.innerHTML = ""; 
+               textElement.innerHTML = "";
                charIndex = 0;
                clearTimeout(typingTimer);
-
                function type() {
                   if (charIndex < fullText.length) {
-                     // Tambahkan 1 huruf
                      textElement.innerHTML += fullText.charAt(charIndex);
                      charIndex++;
-                     
-                     // Lanjut ngetik huruf berikutnya
                      typingTimer = setTimeout(type, typingSpeed);
                   }
                }
-               // Mulai ngetik
                type();
             }
 
             function stopTyping() {
                clearTimeout(typingTimer);
-               textElement.innerHTML = ""; // Kosongkan teks saat hilang
+               textElement.innerHTML = "";
             }
 
-            // --- EVENT LISTENER AR ---
-            
-            // Saat gambar terdeteksi
             target.addEventListener("targetFound", (event) => {
-               console.log("Poster ditemukan");
+               console.log("Found - Playing Audio");
                descBox.classList.add("visible");
-               
-               // Delay sedikit (0.5 detik) sebelum mulai ngetik supaya box muncul dulu
+
+               audioElement.play();
+
                setTimeout(() => {
                   startTyping();
                }, 500);
             });
 
-            // Saat gambar hilang
             target.addEventListener("targetLost", (event) => {
-               console.log("Poster hilang");
+               console.log("Lost - Stopping Audio");
                descBox.classList.remove("visible");
-               stopTyping(); // Hentikan efek ketik
+
+               audioElement.pause();
+               audioElement.currentTime = 0;
+
+               stopTyping();
             });
          });
       </script>
    </head>
    <body>
+      <audio id="bg-audio" preload="auto">
+         <source src="./audio.mp3" type="audio/mpeg" />
+      </audio>
+
+      <div id="start-screen">
+         <div style="color: white; margin-bottom: 20px; font-family: sans-serif; text-align: center">
+            <h3>AR Poster - Nur Izza Yarismen</h3>
+            <p style="font-size: 0.8rem">Klik tombol di bawah untuk mengaktifkan kamera</p>
+         </div>
+         <button id="start-btn">MULAI AR</button>
+      </div>
+
       <div class="floating-desc">
-         <h3>Harmoni TerPADU</h3>
-         <p>
-            <span id="typing-text"></span><span class="cursor">|</span>
-         </p>
+         <h3>Harmoni TerPADU, Prestasi Melaju</h3>
+         <p><span id="typing-text"></span><span class="cursor">|</span></p>
       </div>
 
       <a-scene mindar-image="imageTargetSrc: ./targets.mind; uiScanning: yes;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
          <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
          <a-entity id="target-poster" mindar-image-target="targetIndex: 0">
-            <a-entity gltf-model="./model.glb" rotation="75 0 0" position="-0.5 0 0" scale="0.5 0.5 0.5"> </a-entity>
+            <a-entity gltf-model="./model.glb" rotation="90 0 0" position="0 0 0" scale="0.3 0.3 0.3"> </a-entity>
          </a-entity>
       </a-scene>
    </body>
