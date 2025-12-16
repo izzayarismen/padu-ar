@@ -101,17 +101,17 @@
             const startScreen = document.querySelector("#start-screen");
             const startBtn = document.querySelector("#start-btn");
 
+            // --- 1. Tombol Mulai (Wajib untuk Audio Policy Browser) ---
             startBtn.addEventListener("click", () => {
-               audioElement.muted = true;
+               audioElement.muted = true; // Mute sebentar agar browser mengizinkan play
 
                audioElement
                   .play()
                   .then(() => {
+                     // Langsung pause & reset setelah pancingan berhasil
                      audioElement.pause();
                      audioElement.currentTime = 0;
-
-                     audioElement.muted = false;
-
+                     audioElement.muted = false; // Unmute untuk nanti
                      startScreen.style.display = "none";
                   })
                   .catch((e) => {
@@ -120,6 +120,7 @@
                   });
             });
 
+            // --- 2. Typing Effect Logic ---
             const fullText =
                "Selamat datang di dunia Harmoni TerPADU! Poster ini mengajak kita mewujudkan sekolah impian lewat semangat PADU: Peduli, Adil, Damai, dan Unggul. Yuk, jadikan rasa kebersamaan kita sebagai kekuatan utama untuk menciptakan lingkungan belajar yang nyaman, saling mendukung, dan siap melaju mengukir prestasi terbaik!";
             let typingTimer;
@@ -145,23 +146,29 @@
                textElement.innerHTML = "";
             }
 
+            // --- 3. AR Events (Perbaikan di sini) ---
+
             target.addEventListener("targetFound", (event) => {
                console.log("Found - Playing Audio");
                descBox.classList.add("visible");
 
+               // Play audio. Karena sudah di-reset di targetLost, dia pasti dari awal.
                audioElement.play();
 
                setTimeout(() => {
                   startTyping();
-               }, 500);
+               }, 100);
             });
 
             target.addEventListener("targetLost", (event) => {
                console.log("Lost - Stopping Audio");
                descBox.classList.remove("visible");
 
+               // STOP LOGIC YANG BARU:
+               // 1. Pause dulu
                audioElement.pause();
-               audioElement.currentTime = 0;
+               // 2. Load ulang sumber audio (Ini me-reset buffer ke 0 total)
+               audioElement.load();
 
                stopTyping();
             });
